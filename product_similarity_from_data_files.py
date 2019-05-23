@@ -1,23 +1,15 @@
-import numpy as np
+import pickle
 import pandas as pd
-import matrix_factorization_utilities
+import numpy as np
 
-# Load user ratings
-df = pd.read_csv('movie_ratings_data_set.csv')
-
-# Load movie titles
-movies_df = pd.read_csv('movies.csv', index_col='movie_id')
-
-# Convert the running list of user ratings into a matrix
-ratings_df = pd.pivot_table(df, index='user_id', columns='movie_id', aggfunc=np.max)
-
-# Apply matrix factorization to find the latent features
-U, M = matrix_factorization_utilities.low_rank_matrix_factorization(ratings_df.as_matrix(),
-                                                                    num_features=15,
-                                                                    regularization_amount=1.0)
+# Load prediction rules from data files
+M = pickle.load(open("product_features.dat", "rb"))
 
 # Swap the rows and columns of product_features just so it's easier to work with
 M = np.transpose(M)
+
+# Load movie titles
+movies_df = pd.read_csv('movies.csv', index_col='movie_id')
 
 # Choose a movie to find similar movies to. Let's find movies similar to movie #5:
 movie_id = 5
@@ -43,7 +35,7 @@ difference = M - current_movie_features
 # 2. Take the absolute value of that difference (so all numbers are positive)
 absolute_difference = np.abs(difference)
 
-# 3. Each movie has 15 features. Sum those 15 features to get a total 'difference score' for each movie
+# 3. Each movie has several features. Sum those features to get a total 'difference score' for each movie
 total_difference = np.sum(absolute_difference, axis=1)
 
 # 4. Create a new column in the movie list with the difference score for each movie
